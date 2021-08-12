@@ -1,3 +1,6 @@
+## 说明
+
+> 本文件为运行OpenAndSearch.py文件的输出结果，输出的是常见弹窗API在smali代码下的路径以及弹窗方法
 
 E:\ImmuneDroid_script\smali\smali\com\ali\user\open\core\util\CommonUtils.smali
     invoke-static {v0}, Lcom/ali/user/open/core/util/CommonUtils;->toast(Ljava/lang/String;)V

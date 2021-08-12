@@ -1,3 +1,7 @@
+## 说明
+
+> 本文件为运行extract.py的输出结果，主要内容书输出负面信息字符串以及该字符串对应的name_id
+
 3||'对不起，您的手机不支持地图，暂时无法使用查询网点功能，谢谢！'||GoogleAPIError
 5||'二维码/条形码'||QR_Code
 8||'账户信息加载失败…'||account_info_load_failed
