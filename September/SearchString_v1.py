@@ -160,7 +160,16 @@ def output_arsc_strings(a):
     fout_s.close()
     return arsc_str_id,arsc_str
                     
-
+def fliter_file(file_path):
+    # 替换文件中的字符串
+    replaceStr ="R$string" 
+    with open(file_path,'r',encoding="utf-8") as r:
+        lines=r.readlines()
+    with open(file_path,'w',encoding="utf-8") as w:
+        for l in lines:
+            if replaceStr not in l:
+             w.write(l) 
+    
 
 
 # 要分析的apk路径
@@ -170,6 +179,7 @@ file_path = "F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\com.t
 store_file_path="F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\"
 smali_file_path="F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\smali"
 work_file_path=store_file_path
+arsc_file_path = store_file_path + "arsc_result.txt"
 
 
 if __name__ == '__main__':
@@ -213,7 +223,7 @@ if __name__ == '__main__':
 
 
     #使用echo 重置或创建result.txt文件
-    os.system("echo asrc string search result: >result.txt")
+    os.system("echo asrc string search result: >arsc_result.txt")
 
 
     for i in range(0,len(s)):
@@ -222,16 +232,22 @@ if __name__ == '__main__':
         serach_str=str(s_hex)
 
         # 使用echo向文件中输入分割线与提示内容
-        os.system("echo ------separationline---------- >> result.txt")
-        os.system("echo search stringID: "+serach_str+" >> result.txt")
-        os.system("echo search string content:" + string[i] + ">> result.txt")
-        os.system("echo search result: >> result.txt")
+        os.system("echo ------separationline---------- >> arsc_result.txt")
+        os.system("echo search stringID: "+serach_str+" >> arsc_result.txt")
+        os.system("echo search string content:" + string[i] + ">> arsc_result.txt")
+        os.system("echo search result: >> arsc_result.txt")
 
-        #使用findstr命令递归搜索当前目录及其子目录下的所有smali文件，并追加到result.txt文件中
+        #使用findstr命令递归搜索当前目录及其子目录下的所有smali文件，并追加到arsc_result.txt文件中
         #findstr 相关参数与介绍 参考：https://www.netingcn.com/window-findstr-command.html
 
-        os.system("findstr /MSI \""+serach_str+"\" *.smali >> result.txt")
-        os.system("echo ------separationline---------- >> result.txt")
+        os.system("findstr /MSI \""+serach_str+"\" *.smali >> arsc_result.txt")
+        os.system("echo ------separationline---------- >> arsc_result.txt")
+
+        # 重新处理输出文件去除“R$string"部分
+        arsc_file_path = store_file_path + "arsc_result.txt"
+        fliter_file(arsc_file_path)
+
+
 
     print("语义分析完成")
 
