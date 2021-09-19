@@ -133,5 +133,8 @@ com.telkom.mwallet:
 
 实现对apk的解析
 
+### 3.6 output_arsc_strings(str):
+接收asrc字符串，在main中实现搜索调用（由于androguard没有完成在asrc中的输出调用函数功能，我们使用的是在smali文件中全局搜索ID并输出位置，能够成功）
+
 
 
