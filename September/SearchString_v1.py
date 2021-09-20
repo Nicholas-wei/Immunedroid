@@ -121,7 +121,6 @@ def output_arsc_strings(a):
     if not arscobj:
         print("The APK does not contain a resources file!")
         return
-
     fout_s = open(store_file_path+"output_arsc.txt", "w+", encoding='utf-8')
     strings = arscobj.get_resolved_strings()
     for pkg in strings:
@@ -160,7 +159,7 @@ def output_arsc_strings(a):
     fout_s.close()
     return arsc_str_id,arsc_str
                     
-def fliter_file(file_path):
+def  fliter_file(file_path):
     # 替换文件中的字符串
     replaceStr ="R$string" 
     with open(file_path,'r',encoding="utf-8") as r:
@@ -195,7 +194,7 @@ if __name__ == '__main__':
     s,string = output_arsc_strings(a)
     print ("string length:" + str(len(string)))
     print ("s length:" + str(len(s)))
-    os.system("pause")
+    # os.system("pause")
     print("get arsc strings finish")
     # session.Save(sess,"androguard_session.ag")
     # 使用Textblob处理英文字符。使用Snownlp处理中文语句情感
@@ -219,36 +218,34 @@ if __name__ == '__main__':
     else:
         print("smali file exists!!!")
 
-    # 如果文件里出现中文乱码，修改file encode为GB1213  参考：https://blog.csdn.net/ixusy88/article/details/106391247   (有点问题，暂时不要改)
 
 
-    #使用echo 重置或创建result.txt文件
-    os.system("echo asrc string search result: >arsc_result.txt")
+    # 使用echo 重置或创建result.txt文件
+    os.system("echo asrc string search result: > arsc_result.txt")
 
 
+    os.chdir(smali_file_path)
     for i in range(0,len(s)):
         s_dec=int(s[i],10)
         s_hex=hex(s_dec)
         serach_str=str(s_hex)
 
         # 使用echo向文件中输入分割线与提示内容
-        os.system("echo ------separationline---------- >> arsc_result.txt")
-        os.system("echo search stringID: "+serach_str+" >> arsc_result.txt")
-        os.system("echo search string content:" + string[i] + ">> arsc_result.txt")
-        os.system("echo search result: >> arsc_result.txt")
+        os.system("echo ------separationline---------- >> "+arsc_file_path)
+        os.system("echo search stringID: "+serach_str+" >> "+arsc_file_path)
+        os.system("echo search string content: " + string[i] + " >> "+arsc_file_path)
+        os.system("echo search result: >> "+arsc_file_path)
 
         #使用findstr命令递归搜索当前目录及其子目录下的所有smali文件，并追加到arsc_result.txt文件中
         #findstr 相关参数与介绍 参考：https://www.netingcn.com/window-findstr-command.html
-
-        os.system("findstr /MSI \""+serach_str+"\" *.smali >> arsc_result.txt")
-        os.system("echo ------separationline---------- >> arsc_result.txt")
+        os.system("findstr /MSI \""+serach_str+"\" *.smali >> "+arsc_file_path)
+        # os.system("findstr /MSI \""+serach_str+"\" *.smali >> arsc_result.txt")
+        os.system("echo ------separationline---------- >> "+arsc_file_path)
 
         # 重新处理输出文件去除“R$string"部分
-    arsc_file_path = store_file_path + "arsc_result.txt"
+        # arsc_file_path = store_file_path + "arsc_result.txt"
     fliter_file(arsc_file_path)
 
 
 
     print("语义分析完成")
-
-
