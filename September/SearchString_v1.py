@@ -244,8 +244,8 @@ if __name__ == '__main__':
         os.system("echo ------separationline---------- >> arsc_result.txt")
 
         # 重新处理输出文件去除“R$string"部分
-        arsc_file_path = store_file_path + "arsc_result.txt"
-        fliter_file(arsc_file_path)
+    arsc_file_path = store_file_path + "arsc_result.txt"
+    fliter_file(arsc_file_path)
 
 
 
