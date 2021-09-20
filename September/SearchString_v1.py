@@ -177,7 +177,7 @@ def fliter_file(file_path):
 # sp = 'D:\\文件\\学习\\课程\\曦源项目\\mwallet\\com.telkom.mwallet_101_apps.evozi.com.apk'
 file_path = "F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\com.tencent.wemeet.app_2.18.3.403_2021090322.apk"
 store_file_path="F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\"
-smali_file_path="F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\smali"
+smali_file_path="F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\smali_out"
 work_file_path=store_file_path
 arsc_file_path = store_file_path + "arsc_result.txt"
 
