@@ -159,26 +159,35 @@ def output_arsc_strings(a):
     fout_s.close()
     return arsc_str_id,arsc_str
                     
-def  fliter_file(file_path):
-    # 替换文件中的字符串
-    replaceStr ="R$string" 
-    with open(file_path,'r',encoding="utf-8") as r:
-        lines=r.readlines()
-    with open(file_path,'w',encoding="utf-8") as w:
-        for l in lines:
-            if replaceStr not in l:
-             w.write(l) 
+# def  fliter_file(file_path):
+#     # 替换文件中的字符串
+#     replaceStr ="R$string" 
+#     with open(file_path,'r',encoding="utf-8") as r:
+#         lines=r.readlines()
+#     with open(file_path,'w',encoding="utf-8") as w:
+#         for l in lines:
+#             if replaceStr not in l:
+#              w.write(l) 
     
+#删除指定文件名中含指定字符串的文件  用于删除R$string.smali
+def deletefile(start, name):
+    for relpath, _, files in os.walk(start):
+        if name in files:
+            full_path = os.path.join(start, relpath, name)
+            print(os.path.normpath(os.path.abspath(full_path)))
+            os.remove(os.path.normpath(os.path.abspath(full_path))) 
 
 
 # 要分析的apk路径
 # sp = 'D:\\workspace\\Android-immunity\\androguard_attempt\\19300240012.apk'
 # sp = 'D:\\文件\\学习\\课程\\曦源项目\\mwallet\\com.telkom.mwallet_101_apps.evozi.com.apk'
-file_path = "F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\com.tencent.wemeet.app_2.18.3.403_2021090322.apk"
-store_file_path="F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\"
-smali_file_path="F:\\2021summerImmunedroid\\2021autumn\\apps\\tenceng_metting\\smali_out"
+file_path = "C:\\Users\\86157\\Desktop\\Andguard\\news.apk"
+store_file_path="C:\\Users\\86157\\Desktop\\Andguard\\"
+smali_file_path="C:\\Users\\86157\\Desktop\\Andguard\\smali_out"
 work_file_path=store_file_path
 arsc_file_path = store_file_path + "arsc_result.txt"
+
+delete_string="R$string.smali"
 
 
 if __name__ == '__main__':
@@ -218,6 +227,10 @@ if __name__ == '__main__':
     else:
         print("smali file exists!!!")
 
+    # 删除smali中所有R$sring.smali
+    # 慎用此函数，文件一经删除则无法恢复
+    # 检索较慢，或者第一次运行时可以适当调用该函数
+    # deletefile(smali_file_path,delete_string)
 
 
     # 使用echo 重置或创建result.txt文件
@@ -244,7 +257,7 @@ if __name__ == '__main__':
 
         # 重新处理输出文件去除“R$string"部分
         # arsc_file_path = store_file_path + "arsc_result.txt"
-    fliter_file(arsc_file_path)
+    # fliter_file(arsc_file_path)
 
 
 
