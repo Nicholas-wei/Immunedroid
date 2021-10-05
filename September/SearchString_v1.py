@@ -220,4 +220,5 @@ if __name__ == '__main__':
         fout_arsc.write("search result: \n")
         search_str(dx,str(s[i]),fout_arsc)
         fout_arsc.write("------separationline----------\n")
+    fout_arsc.close()
     print("语义分析完成")
