@@ -1,3 +1,8 @@
+# mkdir 你自己的文件夹
+# 复制test.sh到你自己的文件夹
+# 把.apk文件传到你自己的文件夹(scp *.apk)
+# 运行./test.sh
+# 输出见wzq文件夹所示
 suffix=".apk"
 file_all=$(ls)
 for file in $file_all
