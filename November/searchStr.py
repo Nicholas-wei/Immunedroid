@@ -308,9 +308,13 @@ def read_exception_list(path):
     result = []
     with open(path,'r') as f:
         for line in f:
+            # y:读入第三方库 并用\n 和，分割？
             result.append(line.strip('\n').split(','))
+
+    
     merge = sum(result,[])
     exception_list = []
+
     for item in merge:
         item = item.replace('.', '/')
         exception_list.append(item)
@@ -394,15 +398,16 @@ def get_logical_method(obj,dx,file):
 if __name__ == '__main__':
     # 处理apk
     # file_path = "F:\\2021summerImmunedroid\\2021winter\\com.teladoc.members_748_apps.evozi.com.apk"
-    file_path = "C:\\Users\\86157\\Desktop\\example\\b.apk"
-    store_file_path = "C:\\Users\\86157\\Desktop\\example\\"
+    file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
+    store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
     # store_file_path = "F:\\2021summerImmunedroid\\2021winter\\"
-    exception_list_path = "C:\\Users\\86157\\Desktop\\example\\ThirdLibs.txt"
+    exception_list_path = "./ThirdLibs.txt"
     # file_path,store_file_path = getarg(sys.argv[1:])
     a, d, dx = get_androguard_obj(file_path)
     # test:begin
 
     # test :end
+    # y：读取第三方的库
     read_exception_list(exception_list_path)
 
 
