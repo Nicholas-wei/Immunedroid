@@ -420,7 +420,6 @@ if __name__ == '__main__':
         get_logical_method(neg_string[i],dx,fout_neg_logic)
         fout_neg_logic.write("------separationline----------\n\n")
 
-
     print("output_negstr in program finish")
 
     fout_arsc = open(store_file_path+"arsc_result.txt", "w+", encoding='utf-8')
@@ -438,5 +437,7 @@ if __name__ == '__main__':
         search_str(dx,str(s[i]),fout_arsc,fout_logic,string[i])
         fout_arsc.write("------separationline----------\n")
 
-   
+    fout_arsc.close()
+    fout_logic.close()
+    fout_neg_logic.close()
     print("语义分析完成")
