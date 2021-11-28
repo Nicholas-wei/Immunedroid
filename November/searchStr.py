@@ -255,12 +255,12 @@ def search_str(dx,str,fout,fout2,string):
             # print( ins.get_hex(),ins.get_raw())                          class_name: get_class_name()    method_name:get_name()
             output=ins.get_name()+ins.get_output()
             if str in output:
-                fout.write(ins.get_name()+output+m.get_class_name()+m.get_name()+"\n")
+                fout.write(output+m.get_class_name()+m.get_name()+"\n")
                 if find_logical==0:
                     find_logical=find_logical+1
                     fout2.write("search ID: "+str+"\n")
                     fout2.write("search string content: " + string+"\n")
-                    fout2.write(ins.get_name()+output+m.get_class_name()+m.get_name()+"\n")
+                    fout2.write(output+m.get_class_name()+m.get_name()+"\n")
                     fout2.write("search logic result: \n")
                     get_logical_method(method,dx,fout2)
                     fout2.write("------separationline----------\n\n")
