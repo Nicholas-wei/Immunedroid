@@ -11,7 +11,7 @@ from snownlp import SnowNLP
 from pathlib import Path
 
 global blackList,whiteList
-blackList = ['encrypt','algorithm','decrypt', 'null', 'index out of range','Dead object', 'null', 'msg', 'info', 'invoke', 'call', 'open', 'close','resolve','bind','Google','Expected','registration','account','Account','View','view','message','cipher','Cipher','retrieving','color','Layout','layout','Shared Preferences','upload','object','URL','password','zero','empty','center','response','Failed','failed']
+blackList = ['encrypt','algorithm','decrypt', 'null', 'index out of range','Dead object',  'msg', 'info', 'invoke', 'call', 'open', 'close','resolve','bind','Google','Expected','registration','account','Account','View','view','message','cipher','Cipher','retrieving','color','Layout','layout','Shared Preferences','upload','object','URL','password','zero','empty','center','response','Failed','failed']
 whiteList = ['root','device','debug','exit','fatal','malicious', 'sorry','please','safe','/su','security']
 
 # smali 代码中条件语句
@@ -76,6 +76,7 @@ def is_app_method(name):
             return False
     return True
 
+   
 #检验是否全是中文字符
 def is_all_chinese(strs):
     for _char in strs:
@@ -200,8 +201,16 @@ def output_arsc_strings(a):
                         elif not is_all_chinese(text):
                             blob = TextBlob(text)
                             score = blob.sentiment.polarity
+
+                            # 添加白名单机制
+                            white_flag=0
+                            for item in whiteList:
+                                if item in text:
+                                    white_flag=1+white_flag
+                                    break
+
                             # 下面对消极的字符串进行处理
-                            if score < -0.4:
+                            if score < -0.4 or white_flag:
 
                                 fout_s.write(
                                     str(s) + '\t'+str(strings[pkg][locale][s]) + '\n')
