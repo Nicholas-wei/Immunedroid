@@ -254,22 +254,13 @@ def search_str(dx,strs,fout,fout2,string):
             # os.system("pause")
             # print( ins.get_hex(),ins.get_raw())                          class_name: get_class_name()    method_name:get_name()
             output=ins.get_name()+ins.get_output()
-<<<<<<< HEAD
-            if strs in output:
-                fout.write(str(ins.get_name()) + str(output)+str(m.get_class_name())+str(m.get_name())+"\n")
-=======
             if str in output:
                 fout.write(output+m.get_class_name()+m.get_name()+"\n")
->>>>>>> 0f8e54195ae15e42e5a6f8984db95b33ab92ad91
                 if find_logical==0:
                     find_logical=find_logical+1
                     fout2.write("search ID: "+strs+"\n")
                     fout2.write("search string content: " + string+"\n")
-<<<<<<< HEAD
-                    fout2.write(str(ins.get_name()) + str(output)+str(m.get_class_name())+str(m.get_name())+"\n")
-=======
                     fout2.write(output+m.get_class_name()+m.get_name()+"\n")
->>>>>>> 0f8e54195ae15e42e5a6f8984db95b33ab92ad91
                     fout2.write("search logic result: \n")
                     get_logical_method(method,dx,fout2)
                     fout2.write("------separationline----------\n\n")
