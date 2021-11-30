@@ -398,8 +398,10 @@ def get_logical_method(obj,dx,file):
 if __name__ == '__main__':
     # 处理apk
     # file_path = "F:\\2021summerImmunedroid\\2021winter\\com.teladoc.members_748_apps.evozi.com.apk"
-    file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
-    store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
+    # file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
+    file_path = "C:\\Users\\86157\\Desktop\\exa2\\c.apk"
+    # store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
+    store_file_path = "C:\\Users\\86157\\Desktop\\exa2\\"
     # store_file_path = "F:\\2021summerImmunedroid\\2021winter\\"
     exception_list_path = "./ThirdLibs.txt"
     # file_path,store_file_path = getarg(sys.argv[1:])
