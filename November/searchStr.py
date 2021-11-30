@@ -242,7 +242,7 @@ def  fliter_file(file_path):
              w.write(l) 
     
 
-def search_str(dx,str,fout,fout2,string):
+def search_str(dx,strs,fout,fout2,string):
     #搜索instructions中使用的整数
     for method in dx.get_methods():    
         if method.is_external():
@@ -258,7 +258,7 @@ def search_str(dx,str,fout,fout2,string):
                 fout.write(output+m.get_class_name()+m.get_name()+"\n")
                 if find_logical==0:
                     find_logical=find_logical+1
-                    fout2.write("search ID: "+str+"\n")
+                    fout2.write("search ID: "+strs+"\n")
                     fout2.write("search string content: " + string+"\n")
                     fout2.write(output+m.get_class_name()+m.get_name()+"\n")
                     fout2.write("search logic result: \n")
@@ -376,8 +376,14 @@ def get_logical_method(obj,dx,file):
 
         return
 
-    if type(obj)==str:                              
-        get_logical_method(dx.strings[obj],dx,file)
+    if type(obj)==str:     
+        try: 
+            get_logical_method(dx.strings[obj],dx,file)
+        except KeyError as er:
+            print(er)
+            print('\n')
+                                 
+        
 
 
     elif type(obj)==analysis.StringAnalysis:               #字符串
