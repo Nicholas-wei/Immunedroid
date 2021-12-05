@@ -11,7 +11,7 @@ class eAnalysis:
     def language_category(strClass):
         #检验是否全是中文字符
         for _char in strClass.value:
-            if not '\u4e00' <= _char <= '\u9fa5':
+            if not '\u4e00' <= str(_char) <= '\u9fa5':
                 # 由于翻译器的原因 目前被迫这样设置
                 return
 

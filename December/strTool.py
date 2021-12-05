@@ -146,7 +146,7 @@ class StrTool:
             # 如果在黑名单中就剔除
             def blackListFilter():
                 for i in self.blackList:
-                    if i in immuneStr.value:
+                    if i in str(immuneStr.value):
                         return True
                 return False
 
@@ -155,7 +155,7 @@ class StrTool:
             def thirdLibsFilter():
                 for _, meth in immuneStr.get_xref_from():
                     for i in self.exception_list:
-                        if i in meth.class_name:
+                        if i in str(meth.class_name):
                             return True
                 return False
 
@@ -213,67 +213,69 @@ class StrTool:
                 print('\n')
 
 
-def get_logical_method(obj, dx, file):
 
-    # 对于method 类型的参数有几个情况：
-    #  1.单纯的弹窗函数，在该函数内没有什么有效判断逻辑,需要向上查找调用者函数  （向上递归）
-    #  2.作为一个调用者函数,包含了判断逻辑和调用弹窗函数的函数，可能存在免疫逻辑判断函数  （查找 bool类型的被调用者函数)
-    #  3.作为一个调用者函数，调用了弹窗函数, 自身存在逻辑判断条件，而非调用免疫逻辑判断函数 (查找有关的条件指令)
-    if type(obj) == analysis.MethodClassAnalysis or type(obj) == analysis.MethodAnalysis:
-        find_logic = 0                        # 用来表示是否找到了 相应的逻辑函数
-        if obj.is_external():               # 不考虑外部函数
-            return
 
-        # 向下查找 bool类型的被调用函数
-        for call, meth, _ in obj.get_xref_to():
-            if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
-                continue
-            info = meth.get_information()
-            # 返回类型为bool 类型
-            if 'return' in info and info['return'] == 'boolean':
-                find_logic = find_logic+1
-                temp = obj.get_method()
-                file.write(temp.get_class_name()+temp.get_name() +
-                           " ----calling---- "+meth.get_class_name()+meth.get_name()+"\n")
+# def get_logical_method(obj, dx, file):
 
-        # 查找函数内部条件跳转指令
-        encode_meth = obj.get_method()
-        file.write(encode_meth.get_class_name() +
-                   encode_meth.get_name()+"  conditional mnemonic: \n")
-        for ins in encode_meth.get_instructions():
-            if ins.get_name() in Conditionlist:                  # 寻找条件语句
-                find_logic = find_logic+1
-                file.write(ins.get_name() + ins.get_output()+"\n")
+#     # 对于method 类型的参数有几个情况：
+#     #  1.单纯的弹窗函数，在该函数内没有什么有效判断逻辑,需要向上查找调用者函数  （向上递归）
+#     #  2.作为一个调用者函数,包含了判断逻辑和调用弹窗函数的函数，可能存在免疫逻辑判断函数  （查找 bool类型的被调用者函数)
+#     #  3.作为一个调用者函数，调用了弹窗函数, 自身存在逻辑判断条件，而非调用免疫逻辑判断函数 (查找有关的条件指令)
+#     if type(obj) == analysis.MethodClassAnalysis or type(obj) == analysis.MethodAnalysis:
+#         find_logic = 0                        # 用来表示是否找到了 相应的逻辑函数
+#         if obj.is_external():               # 不考虑外部函数
+#             return
 
-        # 向上查找 1次
-        if find_logic == 0:
-            for class_, call, _ in obj.get_xref_from():
-                meth = class_.get_method_analysis(call)
-                if type(meth) == analysis.MethodClassAnalysis or type(meth) == analysis.MethodAnalysis:
-                    get_logical_method(meth, dx, file)
+#         # 向下查找 bool类型的被调用函数
+#         for call, meth, _ in obj.get_xref_to():
+#             if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
+#                 continue
+#             info = meth.get_information()
+#             # 返回类型为bool 类型
+#             if 'return' in info and info['return'] == 'boolean':
+#                 find_logic = find_logic+1
+#                 temp = obj.get_method()
+#                 file.write(temp.get_class_name()+temp.get_name() +
+#                            " ----calling---- "+meth.get_class_name()+meth.get_name()+"\n")
 
-        return
+#         # 查找函数内部条件跳转指令
+#         encode_meth = obj.get_method()
+#         file.write(encode_meth.get_class_name() +
+#                    encode_meth.get_name()+"  conditional mnemonic: \n")
+#         for ins in encode_meth.get_instructions():
+#             if ins.get_name() in Conditionlist:                  # 寻找条件语句
+#                 find_logic = find_logic+1
+#                 file.write(ins.get_name() + ins.get_output()+"\n")
 
-    if type(obj) == str:
-        try:
-            get_logical_method(dx.strings[obj], dx, file)
-        except KeyError as er:
-            print(er)
-            print('\n')
+#         # 向上查找 1次
+#         if find_logic == 0:
+#             for class_, call, _ in obj.get_xref_from():
+#                 meth = class_.get_method_analysis(call)
+#                 if type(meth) == analysis.MethodClassAnalysis or type(meth) == analysis.MethodAnalysis:
+#                     get_logical_method(meth, dx, file)
 
-    elif type(obj) == analysis.StringAnalysis:  # 字符串
-        for class_, call in obj.get_xref_from():            # 获取所有调用该字符串的函数，分析该函数
-            meth = class_.get_method_analysis(call)
-            if type(meth) == analysis.MethodClassAnalysis or type(meth) == analysis.MethodAnalysis:
-                get_logical_method(meth, dx, file)
+#         return
 
-    # 不是上面的类型,则出错
-    else:
-        print("Error argument,str or method argument is required!")
+#     if type(obj) == str:
+#         try:
+#             get_logical_method(dx.strings[obj], dx, file)
+#         except KeyError as er:
+#             print(er)
+#             print('\n')
+
+#     elif type(obj) == analysis.StringAnalysis:  # 字符串
+#         for class_, call in obj.get_xref_from():            # 获取所有调用该字符串的函数，分析该函数
+#             meth = class_.get_method_analysis(call)
+#             if type(meth) == analysis.MethodClassAnalysis or type(meth) == analysis.MethodAnalysis:
+#                 get_logical_method(meth, dx, file)
+
+#     # 不是上面的类型,则出错
+#     else:
+#         print("Error argument,str or method argument is required!")
 
 
 if __name__ == '__main__':
-    file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
+    file_path = "D:\\workspace\\Immunedroid\\December\\19300240012.apk"
 
     tool = StrTool(file_path)
     # 1. 对字符串提取
@@ -289,6 +291,12 @@ if __name__ == '__main__':
     tool.add_exception_list("./ThirdLibs.txt")  # 添加第三方库
     tool.stringsFilter()
 
+    # 4.1输出消极字符串
+    # 输出到指定文件夹
+    tool.output_calling_method('./')
+    # 直接打印
+    # tool.output_calling_method()
+
     # --------------------------------
     # -注：到第4完成，tool这个类中
     # -tool.filteredStr 里面存储了 最后过滤完的和免疫较为相关的字符串 的列表
@@ -298,21 +306,27 @@ if __name__ == '__main__':
     # --------------------------------
 
     # 5. 逻辑上查找免疫函数 并输出
-    # decompiler = DecompilerJADX(tool.d, tool.dx)
+
+
+    # decompiler = DecompilerJADX(tool.d, tool.dx,jadx="D:\\ctf_tool\\jadx-1.2.0\\bin\\jadx.bat")
     # tool.d.set_decompiler(decompiler)
     # tool.d.set_vmanalysis(tool.dx)
+
+   
+
+
     for immuneStr in tool.filteredStr:
         for c, EncodedMethod in immuneStr.get_xref_from():            # 获取所有调用该字符串的函数，分析该函数
-            meth = c.get_method_analysis(EncodedMethod)
-            print(immuneStr.value+":")
-            # print(type(EncodedMethod))
+            # meth = c.get_method_analysis(EncodedMethod)
+            # print(immuneStr.value+":")
+            print(EncodedMethod)
             # print(decompiler.get_source_method(EncodedMethod))
-            try:
-                print(EncodedMethod.source())
-            except TypeError as error:
-                print(error)
-            except AttributeError as e:
-                print(e)
+            # try:
+            #     print(EncodedMethod.source())
+            # except TypeError as error:
+            #     print(error)
+            # except AttributeError as e:
+            #     print(e)
 
-    # 输出消极字符串
-    # tool.output_calling_method('./')
+
+
