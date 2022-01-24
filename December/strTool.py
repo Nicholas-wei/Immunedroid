@@ -11,6 +11,8 @@ from androguard import misc
 from androguard import session
 from pathlib import Path
 
+from sympy import false, true
+
 from emotionalAnalysis import eAnalysis
 
 
@@ -19,9 +21,9 @@ class strToolError(RuntimeError):
         self.args = arg
 
 
-
 # smali 代码中条件语句
-Conditionlist=['if-ne','if-eq','if-lt','if-le','if-gt','if-ge','if-eqz','if-nez','if-ltz','if-lez','if-gtz','if-gez']
+Conditionlist = ['if-ne', 'if-eq', 'if-lt', 'if-le', 'if-gt',
+                 'if-ge', 'if-eqz', 'if-nez', 'if-ltz', 'if-lez', 'if-gtz', 'if-gez']
 
 
 # 定义一个字符串分析类型
@@ -65,8 +67,8 @@ class StrTool:
         self.dx = analysis.Analysis(self.d)  # 获取分析结果对象
 
         self.dx.create_xref()  # 这里需要创建一下交叉引用
-        self.allStr = self.dx.get_strings()  # 记录所以的字符串
-        self.negDegree = 0.2   # 默认设置为0.75 负面范围0-1
+        self.allStr = self.dx.get_strings()  # 记录所有的字符串
+        self.negDegree = 0.50   # 默认设置为0.75 负面范围0-1
         self.minLen = 4  # 最小的字符长度 小于这个长度就不对这个str进行处理
 
         self.allStr = []  # 这里存储了所有的要分析的字符串
@@ -112,28 +114,49 @@ class StrTool:
             # 对该str进行情感分析
             eAnalysis.emotionalAnalysis(immuneStr)
 
-            if immuneStr.NegScore < self.negDegree:
+            if immuneStr.NegScore < self.negDegree or (immuneStr.fromArsc and self.whiteListFilter(immuneStr)):
                 self.negStr.append(immuneStr)
 
     def create_xref(self, target):
         for immuneStr in target:
             if immuneStr.fromArsc:
-                # 获取apk中所有类
-                # c: `ClassAnalysis`  objects
-                for c in self.dx.get_classes():
-                    # 获取类中的所有方法
-                    # m `MethodClassAnalysis` objects
-                    for m in c.get_methods():
-                        if m.is_external():
-                            continue
+                # 获得所有函数
+                for method in self.dx.get_methods():
+                    if method.is_external():
+                        continue
 
-                        # 获得 Return the `EncodedMethod` object that relates to this object
-                        EncodedMethod = m.get_method()
-                        # 逐条检测方法的指令
-                        # 获得:rtype: an :class:`Instruction` object
-                        for ins in EncodedMethod.get_instructions():
-                            if str(immuneStr.arsc_str_id) in ins.get_output():
-                                immuneStr.AddXrefFrom(c, EncodedMethod)
+                    # 获得 Return the `EncodedMethod` object that relates to this object
+                    EncodedMethod = method.get_method()
+                    for ins in EncodedMethod.get_instructions():
+                        output = ins.get_name()+ins.get_output()
+                        if str(immuneStr.arsc_str_id) in output:
+                            # c: `ClassAnalysis`  objects   ## find_classes
+                            # m = self.dx.get_method(EncodedMethod)
+                            c = self.dx.find_classes(EncodedMethod.class_name)
+                            immuneStr.AddXrefFrom(
+                                c, EncodedMethod)
+                # # 获取apk中所有类
+                # # c: `ClassAnalysis`  objects   ## find_classes
+                # for c in self.dx.get_classes():
+                #     # 获取类中的所有方法
+                #     # m `MethodClassAnalysis` objects
+                #     for m in c.get_methods():
+                #         if m.is_external():
+                #             continue
+
+                #         EncodedMethod = m.get_method()
+                #         # 逐条检测方法的指令
+                #         # 获得:rtype: an :class:`Instruction` object
+                #         for ins in EncodedMethod.get_instructions():
+                #             if str(immuneStr.arsc_str_id) in ins.get_output():
+                #                 print("Yes,you come here!")
+
+    # 如果在白名单中则保留
+    def whiteListFilter(self, immune_str):
+        for i in self.whiteList:
+            if i in str(immune_str.value):
+                return True
+        return False
 
     def negStrXref(self):
         # 只对消极字符串进行交叉引用
@@ -155,6 +178,8 @@ class StrTool:
             def thirdLibsFilter():
                 for _, meth in immuneStr.get_xref_from():
                     for i in self.exception_list:
+                        # if type(meth) == analysis.MethodAnalysis:
+                        #     meth = meth.get_method()
                         if i in str(meth.class_name):
                             return True
                 return False
@@ -163,7 +188,7 @@ class StrTool:
             if not immuneStr.get_xref_from():
                 continue
 
-            if blackListFilter() or thirdLibsFilter():
+            if not self.whiteListFilter(immuneStr) and (blackListFilter() or thirdLibsFilter()):
                 continue
 
             self.filteredStr.append(immuneStr)
@@ -211,10 +236,59 @@ class StrTool:
                     except:
                         raise strToolError("output_calling_method error")
                 print('\n')
+                
+    def is_logical(self,EncodedMethod)->bool:
+        for ins in EncodedMethod.get_instructions():
+            if ins.get_name() in Conditionlist:
+                return true
+        return false    
+
+# 写一下主要思路，明早起床之后实现，首先判断是不是arsc字符串
+# 1. arsc字符串 其xref一般为 弹窗调用函数，直接从其调用者中的bool函数或其本身条件逻辑出发
+# 2. 一般字符串，其xref可能为按照下面的三种method进行
+# !需要递归的情况(或者仅为一般弹窗函数):没有条件语句，此时需要向上递归
 
 
-
-
+    def get_logical_method(self,file):
+        f=open(file,"w+", encoding='utf-8')
+        for immuneStr in self.filteredStr:
+            logic_cnt = 0
+            for _, EncodedMethod in immuneStr.get_xref_from():
+                # 查找弹窗函数的caller 调用的bool函数
+                # 获得EncodedMethod对应的MethodAnalysis
+                MethodAnalysis = self.dx.get_method_analysis(EncodedMethod)
+                if MethodAnalysis.is_external():
+                    continue
+                for _, meth, _ in MethodAnalysis.get_xref_to():
+                    if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
+                        continue
+                    info=meth.get_information()
+                    if 'return' in info and info['return']=='boolean':
+                        logic_cnt+=1
+                        f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, meth.get_class_name()+meth.get_name()))
+                if logic_cnt:                                      # 存在逻辑函数   小组对应的逻辑函数是小李
+                    break
+                else:
+                    if self.is_logical(EncodedMethod):
+                        logic_cnt+=1
+                        f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name()))
+                    else:                                           # 第三种情况，向上递归一次
+                        m=MethodAnalysis
+                        for class_,call,_ in m.get_xref_from():
+                            MethodAnalysis=class_.get_method_analysis(call)
+                            EncodedMethod=MethodAnalysis.get_method()
+                            if MethodAnalysis.is_external():
+                                continue
+                            for _,meth,_ in MethodAnalysis.get_xref_to():
+                                if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
+                                    continue
+                                info=meth.get_information()
+                                if 'return' in info and info['return']=='boolean':
+                                    logic_cnt+=1
+                                    f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, meth.get_class_name()+meth.get_name()))
+                            if not logic_cnt:                                
+                                f.write("[%d]%s || %s\n" % (logic_cnt+1, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name()))        
+        f.close()
 # def get_logical_method(obj, dx, file):
 
 #     # 对于method 类型的参数有几个情况：
@@ -269,15 +343,14 @@ class StrTool:
 #             if type(meth) == analysis.MethodClassAnalysis or type(meth) == analysis.MethodAnalysis:
 #                 get_logical_method(meth, dx, file)
 
+
 #     # 不是上面的类型,则出错
 #     else:
 #         print("Error argument,str or method argument is required!")
-
-
 if __name__ == '__main__':
-    file_path = "D:\\workspace\\Immunedroid\\December\\19300240012.apk"
-
-    tool = StrTool(file_path)
+    file_path = "C:\\Users\\86157\\Desktop\\example\\"
+    apk_file = file_path+"b.apk"
+    tool = StrTool(apk_file)
     # 1. 对字符串提取
     tool.getStrings()
 
@@ -288,12 +361,12 @@ if __name__ == '__main__':
     tool.negStrXref()
 
     # 4. 对检索出的消极字符串进行剔除
-    tool.add_exception_list("./ThirdLibs.txt")  # 添加第三方库
+    tool.add_exception_list(file_path+"ThirdLibs.txt")  # 添加第三方库
     tool.stringsFilter()
 
     # 4.1输出消极字符串
     # 输出到指定文件夹
-    tool.output_calling_method('./')
+    tool.output_calling_method(file_path)
     # 直接打印
     # tool.output_calling_method()
 
@@ -306,20 +379,16 @@ if __name__ == '__main__':
     # --------------------------------
 
     # 5. 逻辑上查找免疫函数 并输出
-
-
+    tool.get_logical_method(file=file_path+"logical_method.txt")
     # decompiler = DecompilerJADX(tool.d, tool.dx,jadx="D:\\ctf_tool\\jadx-1.2.0\\bin\\jadx.bat")
     # tool.d.set_decompiler(decompiler)
     # tool.d.set_vmanalysis(tool.dx)
 
-   
-
-
-    for immuneStr in tool.filteredStr:
-        for c, EncodedMethod in immuneStr.get_xref_from():            # 获取所有调用该字符串的函数，分析该函数
-            # meth = c.get_method_analysis(EncodedMethod)
-            # print(immuneStr.value+":")
-            print(EncodedMethod)
+    # for immuneStr in tool.filteredStr:
+    #     for c, EncodedMethod in immuneStr.get_xref_from():            # 获取所有调用该字符串的函数，分析该函数
+    #         # meth = c.get_method_analysis(EncodedMethod)
+    #         # print(immuneStr.value+":")
+    #         print(EncodedMethod)
             # print(decompiler.get_source_method(EncodedMethod))
             # try:
             #     print(EncodedMethod.source())
@@ -327,6 +396,3 @@ if __name__ == '__main__':
             #     print(error)
             # except AttributeError as e:
             #     print(e)
-
-
-

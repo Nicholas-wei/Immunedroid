@@ -339,8 +339,8 @@ def get_logical_method(obj,dx,file):
 
     # 对于method 类型的参数有几个情况：
     #  1.单纯的弹窗函数，在该函数内没有什么有效判断逻辑,需要向上查找调用者函数  （向上递归）
-    #  2.作为一个调用者函数,包含了判断逻辑和调用弹窗函数的函数，可能存在免疫逻辑判断函数  （查找 bool类型的被调用者函数)
-    #  3.作为一个调用者函数，调用了弹窗函数, 自身存在逻辑判断条件，而非调用免疫逻辑判断函数 (查找有关的条件指令)
+    #  2.作为一个调用者函数,包含了判断逻辑和调用弹窗函数的函数，可能存在免疫逻辑判断函数  （查找 bool类型的被调用者函数)  返回bool类型的函数
+    #  3.作为一个调用者函数，调用了弹窗函数, 自身存在逻辑判断条件，而非调用免疫逻辑判断函数 (查找有关的条件指令)   直接返回该函数
     if type(obj)==analysis.MethodClassAnalysis or type(obj)==analysis.MethodAnalysis:
         find_logic=0                        # 用来表示是否找到了 相应的逻辑函数
         if obj.is_external():               # 不考虑外部函数
@@ -405,9 +405,9 @@ if __name__ == '__main__':
     # 处理apk
     # file_path = "F:\\2021summerImmunedroid\\2021winter\\com.teladoc.members_748_apps.evozi.com.apk"
     # file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
-    file_path = "C:\\Users\\86157\\Desktop\\exa2\\c.apk"
+    file_path = "C:\\Users\\86157\\Desktop\\example\\b.apk"
     # store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
-    store_file_path = "C:\\Users\\86157\\Desktop\\exa2\\"
+    store_file_path = "C:\\Users\\86157\\Desktop\\example\\"
     # store_file_path = "F:\\2021summerImmunedroid\\2021winter\\"
     exception_list_path = "./ThirdLibs.txt"
     # file_path,store_file_path = getarg(sys.argv[1:])
