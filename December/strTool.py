@@ -371,7 +371,7 @@ class StrTool:
 #         print("Error argument,str or method argument is required!")
 if __name__ == '__main__':
     file_path = "C:\\Users\\86157\\Desktop\\example\\"
-    apk_file = file_path+"c.apk"
+    apk_file = file_path+"b.apk"
     tool = StrTool(apk_file)
     # 1. 对字符串提取
     tool.getStrings()

@@ -354,9 +354,9 @@ def get_logical_method(obj,dx,file):
             info=meth.get_information()
             if 'return' in info and info['return']=='boolean':              # 返回类型为bool 类型
                 find_logic=find_logic+1
-                temp=obj.get_method()
-                # file.write("[%d] || %s\n" % (find_logic,  meth.get_class_name()+meth.get_name())+"\n")
-                file.write(temp.get_class_name()+temp.get_name()+" ----calling---- "+meth.get_class_name()+meth.get_name()+"\n")
+                # temp=obj.get_method()
+                file.write("[%d] || %s\n" % (find_logic,  meth.get_class_name()+meth.get_name())+"\n")
+                # file.write(temp.get_class_name()+temp.get_name()+" ----calling---- "+meth.get_class_name()+meth.get_name()+"\n")
 
 
         # 查找函数内部条件跳转指令
@@ -366,9 +366,9 @@ def get_logical_method(obj,dx,file):
             for ins in encode_meth.get_instructions():
                 if ins.get_name() in Conditionlist:                  # 寻找条件语句
                     find_logic=find_logic+1
-                    # file.write("[%d] || %s\n" % (find_logic,  encode_meth.get_class_name()+encode_meth.get_name())+"\n")
-                    # break
-                    file.write(ins.get_name()+ ins.get_output()+"\n")
+                    file.write("[%d] || %s\n" % (find_logic,  encode_meth.get_class_name()+encode_meth.get_name())+"\n")
+                    break
+                    # file.write(ins.get_name()+ ins.get_output()+"\n")
 
 
         # 向上查找 1次
@@ -409,7 +409,7 @@ if __name__ == '__main__':
     # 处理apk
     # file_path = "F:\\2021summerImmunedroid\\2021winter\\com.teladoc.members_748_apps.evozi.com.apk"
     # file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
-    file_path = "C:\\Users\\86157\\Desktop\\example\\a.apk"
+    file_path = "C:\\Users\\86157\\Desktop\\example\\b.apk"
     # store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
     store_file_path = "C:\\Users\\86157\\Desktop\\example\\"
     # store_file_path = "F:\\2021summerImmunedroid\\2021winter\\"
