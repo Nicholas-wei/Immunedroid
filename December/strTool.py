@@ -10,6 +10,7 @@ from androguard.decompiler.decompiler import DecompilerJADX
 from androguard import misc
 from androguard import session
 from pathlib import Path
+from matplotlib.pyplot import pause
 
 from sympy import false, true
 
@@ -57,6 +58,9 @@ class IstrAnalysis(analysis.StringAnalysis):
         # 未使用下面的变量  后面可以添加
         # 翻译为英文的text
         self.text_to_en = None
+        
+        # arsc字符串的调用函数
+        self.xref_method=[]
 
 
 class StrTool:
@@ -68,7 +72,7 @@ class StrTool:
 
         self.dx.create_xref()  # 这里需要创建一下交叉引用
         self.allStr = self.dx.get_strings()  # 记录所有的字符串
-        self.negDegree = 0.50   # 默认设置为0.75 负面范围0-1
+        self.negDegree = 0.20   # 默认设置为0.75 负面范围0-1
         self.minLen = 4  # 最小的字符长度 小于这个长度就不对这个str进行处理
 
         self.allStr = []  # 这里存储了所有的要分析的字符串
@@ -132,9 +136,13 @@ class StrTool:
                         if str(immuneStr.arsc_str_id) in output:
                             # c: `ClassAnalysis`  objects   ## find_classes
                             # m = self.dx.get_method(EncodedMethod)
-                            c = self.dx.find_classes(EncodedMethod.class_name)
-                            immuneStr.AddXrefFrom(
-                                c, EncodedMethod)
+                            # print(1)
+                            immuneStr.xref_method.append(EncodedMethod)
+                # if len(immuneStr.xref_method):            
+                #     print("len1: "+str(len(immuneStr.xref_method))+"\n")            
+                            # c = self.dx.find_classes(EncodedMethod.class_name)
+                            # immuneStr.AddXrefFrom(
+                            #     c, EncodedMethod)
                 # # 获取apk中所有类
                 # # c: `ClassAnalysis`  objects   ## find_classes
                 # for c in self.dx.get_classes():
@@ -184,12 +192,14 @@ class StrTool:
                             return True
                 return False
 
-            # 如果是没有被引用剔除
-            if not immuneStr.get_xref_from():
-                continue
-
-            if not self.whiteListFilter(immuneStr) and (blackListFilter() or thirdLibsFilter()):
-                continue
+            if immuneStr.fromArsc:
+                if not self.whiteListFilter(immuneStr) and blackListFilter():
+                    continue
+                
+             # 剔除没有被引用的一般字符串    
+            else:
+                if not immuneStr.get_xref_from() or blackListFilter() or thirdLibsFilter():
+                    continue
 
             self.filteredStr.append(immuneStr)
 
@@ -216,11 +226,14 @@ class StrTool:
                     cnt += 1
                     if i.fromArsc:
                         f.write("\n--fromArsc--")
-                    for call in i.get_xref_from():
-                        try:
-                            f.write("\n\t"+str(call))
-                        except:
-                            raise strToolError("output_calling_method error")
+                        for meth in i.xref_method:
+                            f.write("\n\t"+str(meth))
+                    else:        
+                        for call in i.get_xref_from():
+                            try:
+                                f.write("\n\t"+str(call))
+                            except:
+                                raise strToolError("output_calling_method error")
 
                     f.write('\n\n')
         else:
@@ -230,11 +243,14 @@ class StrTool:
                 cnt += 1
                 if i.fromArsc:
                     print("--fromArsc--")
-                for call in i.get_xref_from():
-                    try:
-                        print("\t"+str(call))
-                    except:
-                        raise strToolError("output_calling_method error")
+                    for meth in i.xref_method:
+                            print("\n\t"+str(meth))
+                else:            
+                    for call in i.get_xref_from():
+                        try:
+                            print("\t"+str(call))
+                        except:
+                            raise strToolError("output_calling_method error")
                 print('\n')
                 
     def is_logical(self,EncodedMethod)->bool:
@@ -253,7 +269,13 @@ class StrTool:
         f=open(file,"w+", encoding='utf-8')
         for immuneStr in self.filteredStr:
             logic_cnt = 0
-            for _, EncodedMethod in immuneStr.get_xref_from():
+            EncodedMethods=[]
+            if immuneStr.fromArsc:
+                EncodedMethods=immuneStr.xref_method
+            else:
+                EncodedMethods=[EncodedMethod for _, EncodedMethod in immuneStr.get_xref_from()]    
+                
+            for  EncodedMethod in EncodedMethods:
                 # 查找弹窗函数的caller 调用的bool函数
                 # 获得EncodedMethod对应的MethodAnalysis
                 MethodAnalysis = self.dx.get_method_analysis(EncodedMethod)
@@ -349,7 +371,7 @@ class StrTool:
 #         print("Error argument,str or method argument is required!")
 if __name__ == '__main__':
     file_path = "C:\\Users\\86157\\Desktop\\example\\"
-    apk_file = file_path+"b.apk"
+    apk_file = file_path+"c.apk"
     tool = StrTool(apk_file)
     # 1. 对字符串提取
     tool.getStrings()

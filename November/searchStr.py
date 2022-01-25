@@ -241,7 +241,7 @@ def  fliter_file(file_path):
             if replaceStr not in l:
              w.write(l) 
     
-
+# strs 为ID，string 为内容
 def search_str(dx,strs,fout,fout2,string):
     #搜索instructions中使用的整数
     for method in dx.get_methods():    
@@ -254,7 +254,7 @@ def search_str(dx,strs,fout,fout2,string):
             # os.system("pause")
             # print( ins.get_hex(),ins.get_raw())                          class_name: get_class_name()    method_name:get_name()
             output=ins.get_name()+ins.get_output()
-            if str in output:
+            if strs in output:
                 fout.write(output+m.get_class_name()+m.get_name()+"\n")
                 if find_logical==0:
                     find_logical=find_logical+1
@@ -355,16 +355,20 @@ def get_logical_method(obj,dx,file):
             if 'return' in info and info['return']=='boolean':              # 返回类型为bool 类型
                 find_logic=find_logic+1
                 temp=obj.get_method()
+                # file.write("[%d] || %s\n" % (find_logic,  meth.get_class_name()+meth.get_name())+"\n")
                 file.write(temp.get_class_name()+temp.get_name()+" ----calling---- "+meth.get_class_name()+meth.get_name()+"\n")
 
 
         # 查找函数内部条件跳转指令
-        encode_meth=obj.get_method()
-        file.write(encode_meth.get_class_name()+encode_meth.get_name()+"  conditional mnemonic: \n")
-        for ins in encode_meth.get_instructions():
-            if ins.get_name() in Conditionlist:                  # 寻找条件语句
-                find_logic=find_logic+1
-                file.write(ins.get_name()+ ins.get_output()+"\n")
+        if not find_logic:
+            encode_meth=obj.get_method()
+            # file.write(encode_meth.get_class_name()+encode_meth.get_name()+"  conditional mnemonic: \n")
+            for ins in encode_meth.get_instructions():
+                if ins.get_name() in Conditionlist:                  # 寻找条件语句
+                    find_logic=find_logic+1
+                    # file.write("[%d] || %s\n" % (find_logic,  encode_meth.get_class_name()+encode_meth.get_name())+"\n")
+                    # break
+                    file.write(ins.get_name()+ ins.get_output()+"\n")
 
 
         # 向上查找 1次
@@ -405,7 +409,7 @@ if __name__ == '__main__':
     # 处理apk
     # file_path = "F:\\2021summerImmunedroid\\2021winter\\com.teladoc.members_748_apps.evozi.com.apk"
     # file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
-    file_path = "C:\\Users\\86157\\Desktop\\example\\b.apk"
+    file_path = "C:\\Users\\86157\\Desktop\\example\\a.apk"
     # store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
     store_file_path = "C:\\Users\\86157\\Desktop\\example\\"
     # store_file_path = "F:\\2021summerImmunedroid\\2021winter\\"
