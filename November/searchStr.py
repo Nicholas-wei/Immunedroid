@@ -409,7 +409,7 @@ if __name__ == '__main__':
     # 处理apk
     # file_path = "F:\\2021summerImmunedroid\\2021winter\\com.teladoc.members_748_apps.evozi.com.apk"
     # file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
-    file_path = "C:\\Users\\86157\\Desktop\\example\\b.apk"
+    file_path = "C:\\Users\\86157\\Desktop\\example\\zhihu.apk"
     # store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
     store_file_path = "C:\\Users\\86157\\Desktop\\example\\"
     # store_file_path = "F:\\2021summerImmunedroid\\2021winter\\"

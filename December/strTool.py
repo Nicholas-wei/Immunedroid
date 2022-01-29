@@ -12,7 +12,6 @@ from androguard import session
 from pathlib import Path
 from matplotlib.pyplot import pause
 
-from sympy import false, true
 
 from emotionalAnalysis import eAnalysis
 
@@ -72,7 +71,7 @@ class StrTool:
 
         self.dx.create_xref()  # 这里需要创建一下交叉引用
         self.allStr = self.dx.get_strings()  # 记录所有的字符串
-        self.negDegree = 0.20   # 默认设置为0.75 负面范围0-1
+        self.negDegree = 0.30   # 默认设置为0.75 负面范围0-1
         self.minLen = 4  # 最小的字符长度 小于这个长度就不对这个str进行处理
 
         self.allStr = []  # 这里存储了所有的要分析的字符串
@@ -134,30 +133,8 @@ class StrTool:
                     for ins in EncodedMethod.get_instructions():
                         output = ins.get_name()+ins.get_output()
                         if str(immuneStr.arsc_str_id) in output:
-                            # c: `ClassAnalysis`  objects   ## find_classes
-                            # m = self.dx.get_method(EncodedMethod)
-                            # print(1)
                             immuneStr.xref_method.append(EncodedMethod)
-                # if len(immuneStr.xref_method):            
-                #     print("len1: "+str(len(immuneStr.xref_method))+"\n")            
-                            # c = self.dx.find_classes(EncodedMethod.class_name)
-                            # immuneStr.AddXrefFrom(
-                            #     c, EncodedMethod)
-                # # 获取apk中所有类
-                # # c: `ClassAnalysis`  objects   ## find_classes
-                # for c in self.dx.get_classes():
-                #     # 获取类中的所有方法
-                #     # m `MethodClassAnalysis` objects
-                #     for m in c.get_methods():
-                #         if m.is_external():
-                #             continue
 
-                #         EncodedMethod = m.get_method()
-                #         # 逐条检测方法的指令
-                #         # 获得:rtype: an :class:`Instruction` object
-                #         for ins in EncodedMethod.get_instructions():
-                #             if str(immuneStr.arsc_str_id) in ins.get_output():
-                #                 print("Yes,you come here!")
 
     # 如果在白名单中则保留
     def whiteListFilter(self, immune_str):
@@ -256,10 +233,10 @@ class StrTool:
     def is_logical(self,EncodedMethod)->bool:
         for ins in EncodedMethod.get_instructions():
             if ins.get_name() in Conditionlist:
-                return true
-        return false    
+                return True
+        return False    
 
-# 写一下主要思路，明早起床之后实现，首先判断是不是arsc字符串
+# 首先判断是不是arsc字符串
 # 1. arsc字符串 其xref一般为 弹窗调用函数，直接从其调用者中的bool函数或其本身条件逻辑出发
 # 2. 一般字符串，其xref可能为按照下面的三种method进行
 # !需要递归的情况(或者仅为一般弹窗函数):没有条件语句，此时需要向上递归
@@ -371,8 +348,12 @@ class StrTool:
 #         print("Error argument,str or method argument is required!")
 if __name__ == '__main__':
     file_path = "C:\\Users\\86157\\Desktop\\example\\"
-    apk_file = file_path+"b.apk"
-    tool = StrTool(apk_file)
+    apk_name="b.apk"
+    apk_file_path=file_path+os.path.splitext(apk_name)[0]+"\\"
+    if not os.path.exists(apk_file_path):
+        os.mkdir(apk_file_path)
+    
+    tool = StrTool(file_path+apk_name)
     # 1. 对字符串提取
     tool.getStrings()
 
@@ -388,7 +369,7 @@ if __name__ == '__main__':
 
     # 4.1输出消极字符串
     # 输出到指定文件夹
-    tool.output_calling_method(file_path)
+    tool.output_calling_method(apk_file_path)
     # 直接打印
     # tool.output_calling_method()
 
@@ -401,7 +382,7 @@ if __name__ == '__main__':
     # --------------------------------
 
     # 5. 逻辑上查找免疫函数 并输出
-    tool.get_logical_method(file=file_path+"logical_method.txt")
+    tool.get_logical_method(file=apk_file_path+"logical_method.txt")
     # decompiler = DecompilerJADX(tool.d, tool.dx,jadx="D:\\ctf_tool\\jadx-1.2.0\\bin\\jadx.bat")
     # tool.d.set_decompiler(decompiler)
     # tool.d.set_vmanalysis(tool.dx)
