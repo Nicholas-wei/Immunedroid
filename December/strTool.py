@@ -2,6 +2,7 @@ from io import TextIOBase
 import sys
 import getopt
 import os
+import re
 # 导入核心的三个模块
 from androguard.core.bytecodes import apk
 from androguard.core.bytecodes import dvm
@@ -99,18 +100,41 @@ class StrTool:
         if not arscobj:
             print("Immunedroid: The APK does not contain a resources file!")
             return
-
+        
+        pkg = self.a.get_package()     # 只输出该包名下的string
+        locale = 'DEFAULT'             # 只输出默认语言的string
         strings = arscobj.get_resolved_strings()
-        for pkg in strings:
-            if pkg == self.a.get_package():  # 只输出该包名下的string
-                for locale in strings[pkg]:
-                    if locale == 'DEFAULT':  # 只输出默认语言的string
-                        for s in strings[pkg][locale]:
-                            if len(strings[pkg][locale][s]) >= self.minLen:
-                                immuneStrArs = IstrAnalysis()
-                                immuneStrArs.arsc_str_id = s
-                                immuneStrArs.value = strings[pkg][locale][s]
-                                self.allStr.append(immuneStrArs)
+        id_list=[s for s in strings[pkg][locale]]       # 存放name ID
+        string_tags = arscobj.get_string_resources(pkg).decode().split('\n')
+        index=0
+        # contents=[tag for tag in arscobj.get_string_resources(pkg).decode().split('\n')]
+        for tag in string_tags:
+            match = re.search(r'>.*<',tag)
+            if match:
+                content = tag[match.span()[0]+1:match.span()[1]-1]
+                if len(content) >= self.minLen:
+                    immuneStrArs = IstrAnalysis()
+                    immuneStrArs.arsc_str_id = id_list[index]
+                    index+=1
+                    immuneStrArs.value = content
+                    self.allStr.append(immuneStrArs)
+
+                
+        # for pkg in strings:
+        #     if pkg == self.a.get_package():  # 只输出该包名下的string
+        #         for locale in strings[pkg]:
+        #             if locale == 'DEFAULT':  # 只输出默认语言的string
+        #                 for s in strings[pkg][locale]:
+        #                     if strings[pkg][locale][s]!=None:
+        #                         content=strings[pkg][locale][s]
+        #                     else:
+                                
+        #                         content    
+        #                     if len(content) >= self.minLen:
+        #                         immuneStrArs = IstrAnalysis()
+        #                         immuneStrArs.arsc_str_id = s
+        #                         immuneStrArs.value = strings[pkg][locale][s]
+        #                         self.allStr.append(immuneStrArs)
 
     def strAnalysis(self):
         for immuneStr in self.allStr:
@@ -175,7 +199,7 @@ class StrTool:
                 
              # 剔除没有被引用的一般字符串    
             else:
-                if not immuneStr.get_xref_from() or blackListFilter() or thirdLibsFilter():
+                if not self.whiteListFilter(immuneStr) and (not immuneStr.get_xref_from() or blackListFilter() or thirdLibsFilter()):
                     continue
 
             self.filteredStr.append(immuneStr)
@@ -348,7 +372,7 @@ class StrTool:
 #         print("Error argument,str or method argument is required!")
 if __name__ == '__main__':
     file_path = "C:\\Users\\86157\\Desktop\\example\\"
-    apk_name="b.apk"
+    apk_name="com.taskade.mobile_449_apps.evozi.com.apk"
     apk_file_path=file_path+os.path.splitext(apk_name)[0]+"\\"
     if not os.path.exists(apk_file_path):
         os.mkdir(apk_file_path)
