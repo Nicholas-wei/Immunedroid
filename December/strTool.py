@@ -1,19 +1,9 @@
-from io import TextIOBase
-import sys
-import getopt
 import os
 import re
 # 导入核心的三个模块
-from androguard.core.bytecodes import apk
-from androguard.core.bytecodes import dvm
 from androguard.core.analysis import analysis
-from androguard.decompiler.decompiler import DecompilerJADX
-from androguard import misc
 from androguard import session
-from pathlib import Path
-from matplotlib.pyplot import pause
-
-
+from androguard.misc import AnalyzeAPK
 from emotionalAnalysis import eAnalysis
 
 
@@ -64,15 +54,24 @@ class IstrAnalysis(analysis.StringAnalysis):
 
 
 class StrTool:
-    def __init__(self, apkfile):
+    def __init__(self, apkfile,sess_path):
         self.apkfile = apkfile
-        self.a = apk.APK(self.apkfile)  # 获取APK文件对象
-        self.d = dvm.DalvikVMFormat(self.a.get_dex())  # 获取DEX文件对象
-        self.dx = analysis.Analysis(self.d)  # 获取分析结果对象
+        apk_session=None
+        if os.path.exists(sess_path):               
+            apk_session=session.Load(apk_sess_path)  
+        self.a,self.d,self.dx=AnalyzeAPK(_file=apkfile,session=apk_session)
+        if apk_session is None:
+            session.Save(apk_session, sess_path)    # 使用session保存apk信息，提高多次访问效率
+            
+        
+  
+        # self.a = apk.APK(self.apkfile)  # 获取APK文件对象
+        # self.d = dvm.DalvikVMFormat(self.a.get_dex())  # 获取DEX文件对象
+        # self.dx = analysis.Analysis(self.d)  # 获取分析结果对象
 
-        self.dx.create_xref()  # 这里需要创建一下交叉引用
+        # self.dx.create_xref()  # 这里需要创建一下交叉引用
         self.allStr = self.dx.get_strings()  # 记录所有的字符串
-        self.negDegree = 0.30   # 默认设置为0.75 负面范围0-1
+        self.negDegree = 0.20   # 默认设置为0.75 负面范围0-1
         self.minLen = 4  # 最小的字符长度 小于这个长度就不对这个str进行处理
 
         self.allStr = []  # 这里存储了所有的要分析的字符串
@@ -372,12 +371,14 @@ class StrTool:
 #         print("Error argument,str or method argument is required!")
 if __name__ == '__main__':
     file_path = "C:\\Users\\86157\\Desktop\\example\\"
-    apk_name="com.taskade.mobile_449_apps.evozi.com.apk"
-    apk_file_path=file_path+os.path.splitext(apk_name)[0]+"\\"
+    apk_full_name="b.apk"
+    apk_name=os.path.splitext(apk_full_name)[0]
+    apk_file_path=file_path+apk_name+"\\"
     if not os.path.exists(apk_file_path):
         os.mkdir(apk_file_path)
+    apk_sess_path=apk_file_path+apk_name+".ag"
     
-    tool = StrTool(file_path+apk_name)
+    tool = StrTool(apkfile=file_path+apk_full_name,sess_path=apk_sess_path)
     # 1. 对字符串提取
     tool.getStrings()
 

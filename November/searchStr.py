@@ -4,12 +4,11 @@ import os
 from androguard.core.bytecodes import apk
 from androguard.core.bytecodes import dvm
 from androguard.core.analysis import analysis
-from androguard import misc
 from androguard import session
 from textblob import TextBlob
 from snownlp import SnowNLP
 from pathlib import Path
-
+from androguard.misc import AnalyzeAPK
 global blackList,whiteList
 blackList = ['encrypt','algorithm','decrypt', 'null', 'index out of range','Dead object',  'msg', 'info', 'invoke', 'call', 'open', 'close','resolve','bind','Google','Expected','registration','account','Account','View','view','message','cipher','Cipher','retrieving','color','Layout','layout','Shared Preferences','upload','object','URL','password','zero','empty','center','response','Failed','failed']
 whiteList = ['root','device','debug','exit','fatal','malicious', 'sorry','please','safe','/su','security']
@@ -20,10 +19,11 @@ Conditionlist=['if-ne','if-eq','if-lt','if-le','if-gt','if-ge','if-eqz','if-nez'
 
 # 对apk进行处理
 def get_androguard_obj(apkfile):
-    a = apk.APK(apkfile)  # 获取APK文件对象
-    d = dvm.DalvikVMFormat(a.get_dex())  # 获取DEX文件对象
-    dx = analysis.Analysis(d)  # 获取分析结果对象
-    dx.create_xref()  # 这里需要创建一下交叉引用
+    a,d,dx=AnalyzeAPK(apkfile)
+    # a = apk.APK(apkfile)  # 获取APK文件对象
+    # d = dvm.DalvikVMFormat(a.get_dex())  # 获取DEX文件对象
+    # dx = analysis.Analysis(d)  # 获取分析结果对象
+    # dx.create_xref()  # 这里需要创建一下交叉引用
     return (a, d, dx)
 
 # 输出所有字符串
@@ -409,7 +409,7 @@ if __name__ == '__main__':
     # 处理apk
     # file_path = "F:\\2021summerImmunedroid\\2021winter\\com.teladoc.members_748_apps.evozi.com.apk"
     # file_path = "D:\\workspace\\Immunedroid\\November\\b.apk"
-    file_path = "C:\\Users\\86157\\Desktop\\example\\zhihu.apk"
+    file_path = "C:\\Users\\86157\\Desktop\\example\\a.apk"
     # store_file_path = "D:\\workspace\\Immunedroid\\November\\out\\"
     store_file_path = "C:\\Users\\86157\\Desktop\\example\\"
     # store_file_path = "F:\\2021summerImmunedroid\\2021winter\\"
