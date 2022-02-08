@@ -1,62 +1,87 @@
 from PyQt5 import QtCore, QtWidgets
 import sys
+import os
 import strTool
 import threading
+from PyQt5.QtCore import QBasicTimer
+from PyQt5.QtCore import QThread, pyqtSignal
+import time
 ##########################################
 global path
 path = ""
-startpath = "C:\\Users\\86157\\Desktop\\example\\"
+startpath = "F:/summerImmunedroid2021/spring2022/lotsOfApp/strava"
+time_in_sec = 0
 ##########################################
-#uiç•Œé¢è®¾ç½®
+#ui½çÃæÉèÖÃ
+
+class Thread(QThread):
+    _signal = pyqtSignal(int) #¶¨ÒåĞÅºÅÀàĞÍÎªÕûĞÍ
+    def __init__(self):
+        super(Thread, self).__init__()
+    def __del__(self):
+        self.wait()
+    def run(self):
+        for i in range(1,101):
+            global time_in_sec
+            time.sleep(time_in_sec/100)
+            self._signal.emit(i)  #·¢ÉäĞÅºÅ
+
+
 class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
     
-        #ä¸»çª—å£å‚æ•°è®¾ç½®
+        #Ö÷´°¿Ú²ÎÊıÉèÖÃ
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(848, 721)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
-        # è®¾ç½®åˆ†ææŒ‰é”®å‚æ•°
+        # ÉèÖÃ·ÖÎö°´¼ü²ÎÊı
         self.analyze = QtWidgets.QPushButton(self.centralwidget)
-        # Qrect(a,b,c,d):ä»¥(a,b)ä¸ºå·¦ä¸Šè§’ï¼Œç»™å®šå®½åº¦cå’Œé«˜åº¦dçš„çŸ©å½¢
+        # Qrect(a,b,c,d):ÒÔ(a,b)Îª×óÉÏ½Ç£¬¸ø¶¨¿í¶ÈcºÍ¸ß¶ÈdµÄ¾ØĞÎ
         self.analyze.setGeometry(QtCore.QRect(57, 260, 175, 28))
         self.analyze.setObjectName("file")
         self.analyze.setStyleSheet("background-color:rgb(111,180,219)")
         self.analyze.setStyleSheet(
-            "QPushButton{background-color:rgb(111,180,219)}"  # æŒ‰é”®èƒŒæ™¯è‰²
-            "QPushButton:hover{color:green}"  # å…‰æ ‡ç§»åŠ¨åˆ°ä¸Šé¢åçš„å‰æ™¯è‰²
-            "QPushButton{border-radius:6px}"  # åœ†è§’åŠå¾„
-            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # æŒ‰ä¸‹æ—¶çš„æ ·å¼
+            "QPushButton{background-color:rgb(111,180,219)}"  # °´¼ü±³¾°É«
+            "QPushButton:hover{color:green}"  # ¹â±êÒÆ¶¯µ½ÉÏÃæºóµÄÇ°¾°É«
+            "QPushButton{border-radius:6px}"  # Ô²½Ç°ë¾¶
+            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # °´ÏÂÊ±µÄÑùÊ½
         )
 
-        # è®¾ç½®è·¯å¾„æŒ‰é’®å‚æ•°
+        # ÉèÖÃ½ø¶ÈÌõ²ÎÊı
+        self.pbar = QtWidgets.QProgressBar(self.centralwidget)
+        self.pbar.setGeometry(200,400,480,28)
+        self.pbar.setValue(0)
+
+
+        # ÉèÖÃÂ·¾¶°´Å¥²ÎÊı
         self.file = QtWidgets.QPushButton(self.centralwidget)
         self.file.setGeometry(QtCore.QRect(57, 200, 175, 28))
         self.file.setObjectName("analyze")
         self.file.setStyleSheet("background-color:rgb(111,180,219)")
         self.file.setStyleSheet(
-            "QPushButton{background-color:rgb(111,180,219)}"  # æŒ‰é”®èƒŒæ™¯è‰²
-            "QPushButton:hover{color:green}"  # å…‰æ ‡ç§»åŠ¨åˆ°ä¸Šé¢åçš„å‰æ™¯è‰²
-            "QPushButton{border-radius:6px}"  # åœ†è§’åŠå¾„
-            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # æŒ‰ä¸‹æ—¶çš„æ ·å¼
+            "QPushButton{background-color:rgb(111,180,219)}"  # °´¼ü±³¾°É«
+            "QPushButton:hover{color:green}"  # ¹â±êÒÆ¶¯µ½ÉÏÃæºóµÄÇ°¾°É«
+            "QPushButton{border-radius:6px}"  # Ô²½Ç°ë¾¶
+            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # °´ÏÂÊ±µÄÑùÊ½
         )
 
-        # è®¾ç½®æ˜¾ç¤ºçª—å£å‚æ•°
+        # ÉèÖÃÏÔÊ¾´°¿Ú²ÎÊı
         self.fileT = QtWidgets.QPushButton(self.centralwidget)
         self.fileT.setGeometry(QtCore.QRect(300, 200, 480, 28))
         self.fileT.setObjectName("file")
         self.fileT.setStyleSheet("background-color:rgb(111,180,219)")
         self.fileT.setStyleSheet(
-            "QPushButton{background-color:rgb(111,180,219)}"  # æŒ‰é”®èƒŒæ™¯è‰²
-            "QPushButton:hover{color:green}"  # å…‰æ ‡ç§»åŠ¨åˆ°ä¸Šé¢åçš„å‰æ™¯è‰²
-            "QPushButton{border-radius:6px}"  # åœ†è§’åŠå¾„
-            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # æŒ‰ä¸‹æ—¶çš„æ ·å¼
+            "QPushButton{background-color:rgb(111,180,219)}"  # °´¼ü±³¾°É«
+            "QPushButton:hover{color:green}"  # ¹â±êÒÆ¶¯µ½ÉÏÃæºóµÄÇ°¾°É«
+            "QPushButton{border-radius:6px}"  # Ô²½Ç°ë¾¶
+            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # °´ÏÂÊ±µÄÑùÊ½
         )
 
 
-        #ä¸»çª—å£åŠèœå•æ æ ‡é¢˜æ è®¾ç½®
+        #Ö÷´°¿Ú¼°²Ëµ¥À¸±êÌâÀ¸ÉèÖÃ
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 848, 26))
@@ -69,7 +94,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        ################buttonæŒ‰é’®ç‚¹å‡»äº‹ä»¶å›è°ƒå‡½æ•°################
+        ################button°´Å¥µã»÷ÊÂ¼ş»Øµ÷º¯Êı################
 
         self.file.clicked.connect(self.msg)
         self.analyze.clicked.connect(self.androanalyze)
@@ -78,32 +103,45 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "ImmuneDroid"))
-        self.file.setText(_translate("MainWindow", "é€‰æ‹©æ–‡ä»¶"))
+        self.file.setText(_translate("MainWindow", "choose"))
         self.fileT.setText(_translate("MainWindow", ""))
-        self.analyze.setText(_translate("MainWindow", "å¼€å§‹åˆ†æ"))
+        self.analyze.setText(_translate("MainWindow", "start"))
 
-    #########é€‰æ‹©å›¾ç‰‡æ–‡ä»¶å¤¹#########
+    #########Ñ¡ÔñÍ¼Æ¬ÎÄ¼ş¼Ğ#########
 
     def msg(self,Filepath):
         global path
-        path = QtWidgets.QFileDialog.getOpenFileName(None,"é€‰å–æ–‡ä»¶å¤¹",startpath,"All Files (*);;Text Files (*.txt)")  # èµ·å§‹è·¯å¾„
+        path = QtWidgets.QFileDialog.getOpenFileName(None,"choose file",startpath,"All Files (*);;Text Files (*.txt)")  # ÆğÊ¼Â·¾¶
         # print(m)
-        self.fileT.setText(path[0]) #m[0]æ˜¯åŒ…å«æ–‡ä»¶çš„è·¯å¾„
+        self.fileT.setText(path[0]) #m[0]ÊÇ°üº¬ÎÄ¼şµÄÂ·¾¶
 
-    #########åˆ†æå‡½æ•°å…¥å£#########
+    #########·ÖÎöº¯ÊıÈë¿Ú#########
     def androanalyze(self):
         local_path = ""
         local_path = repr(path[0])
         case = local_path.split("/")
         apk_name = case[-1]
         dir_path = local_path.replace(apk_name,"")
+        file_size = os.path.getsize(local_path.replace("'",""))
         print("apk_name: " + apk_name)
         print("dir_path: " + dir_path)
+        print("file_size: " + str(file_size))
+        global time_in_sec
+        time_in_sec = (int)(file_size/15100)
+        print("time_in_sec: " + str(time_in_sec))
         t = threading.Thread(target=strTool.main_analysis,args = (dir_path,apk_name))
-        t.setDaemon(True) #ä¸å¿…ç­‰å¾…å­çº¿ç¨‹
+        t.setDaemon(True) #²»±ØµÈ´ı×ÓÏß³Ì
         t.start()
+        self.fileT.setText("start! please wait!")
+        self.thread = Thread()
+        self.thread._signal.connect(self.signal_accept)
+        self.thread.start() # µ÷ÓÃ×Ô¶¨ÒåThreadÀàĞÍÖĞrunº¯Êı
+    def signal_accept(self,msg):
+        self.pbar.setValue(int(msg))
+        if self.pbar.value() == 100:
+            self.fileT.setText("finish!")
 
-#########ä¸»å‡½æ•°å…¥å£ #########
+#########Ö÷º¯ÊıÈë¿Ú #########
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
@@ -112,9 +150,4 @@ if __name__ == '__main__':
     ui.setupUi(mainWindow)
     mainWindow.show()
     sys.exit(app.exec_())
-
-
-
-
-
 
