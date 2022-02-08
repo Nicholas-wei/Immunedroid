@@ -5,7 +5,7 @@ import threading
 ##########################################
 global path
 path = ""
-startpath = "F:/summerImmunedroid2021/spring2022/lotsOfApp/strava"
+startpath = "C:\\Users\\86157\\Desktop\\example\\"
 ##########################################
 #ui界面设置
 class Ui_MainWindow(object):

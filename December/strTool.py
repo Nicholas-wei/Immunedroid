@@ -2,11 +2,8 @@ import os
 import re
 # 导入核心的三个模块
 from androguard.core.analysis import analysis
-from androguard import session
 from androguard.misc import AnalyzeAPK
 from emotionalAnalysis import eAnalysis
-
-
 class strToolError(RuntimeError):
     def __init__(self, arg):
         self.args = arg
@@ -54,17 +51,9 @@ class IstrAnalysis(analysis.StringAnalysis):
 
 
 class StrTool:
-    def __init__(self, apkfile,sess_path):
-        self.apkfile = apkfile
-        apk_session=None
-        if os.path.exists(sess_path):               
-            apk_session=session.Load(apk_sess_path)  
-        self.a,self.d,self.dx=AnalyzeAPK(_file=apkfile,session=apk_session)
-        if apk_session is None:
-            session.Save(apk_session, sess_path)    # 使用session保存apk信息，提高多次访问效率
-            
-        
-  
+    def __init__(self, apkfile):
+        self.apkfile = apkfile  
+        self.a,self.d,self.dx=AnalyzeAPK(_file=apkfile)
         # self.a = apk.APK(self.apkfile)  # 获取APK文件对象
         # self.d = dvm.DalvikVMFormat(self.a.get_dex())  # 获取DEX文件对象
         # self.dx = analysis.Analysis(self.d)  # 获取分析结果对象
@@ -99,26 +88,39 @@ class StrTool:
         if not arscobj:
             print("Immunedroid: The APK does not contain a resources file!")
             return
-        
-        pkg = self.a.get_package()     # 只输出该包名下的string
-        locale = 'DEFAULT'             # 只输出默认语言的string
-        strings = arscobj.get_resolved_strings()
-        id_list=[s for s in strings[pkg][locale]]       # 存放name ID
-        string_tags = arscobj.get_string_resources(pkg).decode().split('\n')
-        index=0
-        # contents=[tag for tag in arscobj.get_string_resources(pkg).decode().split('\n')]
-        for tag in string_tags:
-            match = re.search(r'>.*<',tag)
-            if match:
-                content = tag[match.span()[0]+1:match.span()[1]-1]
-                if len(content) >= self.minLen:
-                    immuneStrArs = IstrAnalysis()
-                    immuneStrArs.arsc_str_id = id_list[index]
-                    index+=1
-                    immuneStrArs.value = content
-                    self.allStr.append(immuneStrArs)
 
-                
+        strings = arscobj.get_resolved_strings()
+        for pkg in strings:
+            if pkg == self.a.get_package():  # 只输出该包名下的string
+                for locale in strings[pkg]:
+                    if locale == 'DEFAULT':  # 只输出默认语言的string
+                        for s in strings[pkg][locale]:
+                            if len(strings[pkg][locale][s]) >= self.minLen:
+                                immuneStrArs = IstrAnalysis()
+                                immuneStrArs.arsc_str_id = s
+                                immuneStrArs.value = strings[pkg][locale][s]
+                                self.allStr.append(immuneStrArs)
+        
+        # pkg = self.a.get_package()     # 只输出该包名下的string
+        # locale = 'DEFAULT'             # 只输出默认语言的string
+        # strings = arscobj.get_resolved_strings()
+        # id_list=[s for s in strings[pkg][locale]]       # 存放name ID
+        # data=arscobj.get_string_resources(pkg)
+        # doc = parseString(data)
+        # collection = doc.documentElement.getElementsByTagName('string')
+        # begin=id_list[0]
+        # index=begin
+        # for col in collection:
+        #     if col.hasChildNodes():
+        #         content = col.childNodes[0].data
+        #         immuneStrArs = IstrAnalysis()
+        #         immuneStrArs.arsc_str_id = index
+        #         immuneStrArs.value = content
+        #         if immuneStrArs.arsc_str_id==2131886648:
+        #             print(immuneStrArs.value)
+        #             os.system("pause")
+        #         self.allStr.append(immuneStrArs)    
+        #     index+=1        
         # for pkg in strings:
         #     if pkg == self.a.get_package():  # 只输出该包名下的string
         #         for locale in strings[pkg]:
@@ -157,6 +159,7 @@ class StrTool:
                         output = ins.get_name()+ins.get_output()
                         if str(immuneStr.arsc_str_id) in output:
                             immuneStr.xref_method.append(EncodedMethod)
+           
 
 
     # 如果在白名单中则保留
@@ -252,149 +255,242 @@ class StrTool:
                         except:
                             raise strToolError("output_calling_method error")
                 print('\n')
-                
-    def is_logical(self,EncodedMethod)->bool:
-        for ins in EncodedMethod.get_instructions():
-            if ins.get_name() in Conditionlist:
-                return True
-        return False    
+   
 
 # 首先判断是不是arsc字符串
 # 1. arsc字符串 其xref一般为 弹窗调用函数，直接从其调用者中的bool函数或其本身条件逻辑出发
 # 2. 一般字符串，其xref可能为按照下面的三种method进行
 # !需要递归的情况(或者仅为一般弹窗函数):没有条件语句，此时需要向上递归
 
+# 退休函数:)
+    # def get_logical_method(self,file):
+    #     f=open(file,"w+", encoding='utf-8')
+    #     for immuneStr in self.filteredStr:
+    #         logic_cnt = 0
+    #         EncodedMethods=[]
+    #         if immuneStr.fromArsc:
+    #             EncodedMethods=immuneStr.xref_method
+    #         else:
+    #             EncodedMethods=[EncodedMethod for _, EncodedMethod in immuneStr.get_xref_from()]    
+                
+    #         for  EncodedMethod in EncodedMethods:
+    #             # 查找弹窗函数的caller 调用的bool函数
+    #             # 获得EncodedMethod对应的MethodAnalysis
+    #             MethodAnalysis = self.dx.get_method_analysis(EncodedMethod)
+    #             if MethodAnalysis.is_external():
+    #                 continue
+    #             for _, meth, _ in MethodAnalysis.get_xref_to():
+    #                 if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
+    #                     continue
+    #                 info=meth.get_information()
+    #                 if 'return' in info and info['return']=='boolean':
+    #                     logic_cnt+=1
+    #                     f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, meth.get_class_name()+meth.get_name()))
+    #             if logic_cnt:                                      # 存在逻辑函数   小组对应的逻辑函数是小李
+    #                 break
+    #             else:
+    #                 if self.is_logical(EncodedMethod):
+    #                     logic_cnt+=1
+    #                     f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name()))
+    #                 else:                                           # 第三种情况，向上递归一次
+    #                     m=MethodAnalysis
+    #                     for class_,call,_ in m.get_xref_from():
+    #                         MethodAnalysis=class_.get_method_analysis(call)
+    #                         EncodedMethod=MethodAnalysis.get_method()
+    #                         if MethodAnalysis.is_external():
+    #                             continue
+    #                         for _,meth,_ in MethodAnalysis.get_xref_to():
+    #                             if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
+    #                                 continue
+    #                             info=meth.get_information()
+    #                             if 'return' in info and info['return']=='boolean':
+    #                                 logic_cnt+=1
+    #                                 f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, meth.get_class_name()+meth.get_name()))
+    #                         if not logic_cnt:                                
+    #                             f.write("[%d]%s || %s\n" % (logic_cnt+1, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name()))        
+    #     f.close()
 
-    def get_logical_method(self,file):
+
+# get_logical 辅助函数
+
+# 1. res->logic ? 判断结果是否为表达式或者函数
+    def is_logic(self,string):
+        if string:
+            p_pattern=re.compile(r'[><=!()|&+-/%*^~?:]')      # 匹配表达式和函数
+            match=p_pattern.findall(string)                   # 查找匹配
+            if match:
+                return True
+        return False
+
+# 2. logic->up? 判断是否仅包含p0,p1等的参数                                            
+    def is_para(self,string):
+        if string:
+            p_pattern=re.compile(r'p\d+')                     # 匹配 p0,p1...等参数
+            match=p_pattern.findall(string)                   # 查找匹配
+            if match:
+                return (True,match[0])
+        return (False,None)
+
+
+# 3. 判断是否为本地变量
+    def is_local(self,string):
+        if string:
+            v_pattern=re.compile(r'v\d+_\d+|v\d+')            # 匹配 v0,v1,v0_0..等局部参数
+            match=v_pattern.findall(string)                   # 查找匹配
+            if match:
+                return (True,match[0])
+        return (False,None)    
+        
+# 4. 本地变量左值表达式
+    def get_local_value(self,name,text,pos):
+        n_pattern=re.compile(r'%s =.*\n'%name)                # 匹配 v0_0=xxxx                    
+        match=n_pattern.findall(text,0,pos)                   # 查找匹配
+        if match:
+            return match[-1][:-1]                             # 返回最接近v的匹配
+        return None
+
+
+# 5.判断函数是否存在跳转指令            
+    def has_jump_instruction(self,EncodedMethod)->bool:
+        for ins in EncodedMethod.get_instructions():
+            if ins.get_name() in Conditionlist:
+                return True
+        return False 
+    
+# 6.递归情形进行近似匹配,参考get_locai_method实现,返回匹配到的可能函数名
+    def approximate_match(self,method):
+        # 查找弹窗函数的caller 调用的bool函数
+        # 获得EncodedMethod对应的MethodAnalysis
+        res=[]                                         # 返回 classname+methodname的list
+        MethodAnalysis = self.dx.get_method_analysis(method)                 
+        if MethodAnalysis.is_external():
+            return None
+        for _, meth, _ in MethodAnalysis.get_xref_to():        
+            if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
+                continue    
+            info=meth.get_information()
+            if 'return' in info and info['return']=='boolean':
+                res.append(meth.get_class_name()+meth.get_name())
+        if len(res):                                   # 存在即返回
+            return res    
+        if self.has_jump_instruction(method):          # 存在跳转指令则返回当前返回
+            res.append(method.get_class_name()+method.get_name())    
+            return res    
+        m=MethodAnalysis                               # 最多递归一层
+        for class_,call,_ in m.get_xref_from():
+            MethodAnalysis=class_.get_method_analysis(call)
+            EncodedMethod=MethodAnalysis.get_method()
+            if MethodAnalysis.is_external():
+                continue
+            for _,meth,_ in MethodAnalysis.get_xref_to():
+                if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
+                    continue
+                info=meth.get_information()
+                if 'return' in info and info['return']=='boolean':
+                    res.append(meth.get_class_name()+meth.get_name())
+            if not len(res):
+                res.append(EncodedMethod.get_class_name()+EncodedMethod.get_name())                                
+        return res if len(res) else None
+
+# get_logical 
+    def get_logical(self,file):
         f=open(file,"w+", encoding='utf-8')
+# 1. 从string->method,寻找调用 method            
         for immuneStr in self.filteredStr:
-            logic_cnt = 0
+            logic_cnt=0                                        # 匹配到逻辑语句的次数
+            # max_depth=2                                      # 最大递归层数
+            # depth=0                                          # 当前递归层数
             EncodedMethods=[]
+            
             if immuneStr.fromArsc:
                 EncodedMethods=immuneStr.xref_method
             else:
-                EncodedMethods=[EncodedMethod for _, EncodedMethod in immuneStr.get_xref_from()]    
+                EncodedMethods=[EncodedMethod for _, EncodedMethod in immuneStr.get_xref_from()] 
+# 2. 从method-> method.source
+    # for  EncodedMethod in EncodedMethods:
+    #     try:
+    #         file.write(EncodedMethod.get_source())
+    #     except (TypeError,AttributeError):
+    #         continue
+    #     something todo
+            str_tag=str(immuneStr.arsc_str_id) if immuneStr.fromArsc else immuneStr.value # 匹配字符串标识
+            for EncodedMethod in EncodedMethods:
+                res=None                                           # 匹配结果
+                try:
+                    source=EncodedMethod.get_source()
+                except (TypeError,AttributeError):
+                    continue            
+# 3. method.source->condition  匹配字符串标识
                 
-            for  EncodedMethod in EncodedMethods:
-                # 查找弹窗函数的caller 调用的bool函数
-                # 获得EncodedMethod对应的MethodAnalysis
-                MethodAnalysis = self.dx.get_method_analysis(EncodedMethod)
-                if MethodAnalysis.is_external():
-                    continue
-                for _, meth, _ in MethodAnalysis.get_xref_to():
-                    if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
-                        continue
-                    info=meth.get_information()
-                    if 'return' in info and info['return']=='boolean':
-                        logic_cnt+=1
-                        f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, meth.get_class_name()+meth.get_name()))
-                if logic_cnt:                                      # 存在逻辑函数   小组对应的逻辑函数是小李
-                    break
-                else:
-                    if self.is_logical(EncodedMethod):
-                        logic_cnt+=1
-                        f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name()))
-                    else:                                           # 第三种情况，向上递归一次
-                        m=MethodAnalysis
-                        for class_,call,_ in m.get_xref_from():
-                            MethodAnalysis=class_.get_method_analysis(call)
-                            EncodedMethod=MethodAnalysis.get_method()
-                            if MethodAnalysis.is_external():
-                                continue
-                            for _,meth,_ in MethodAnalysis.get_xref_to():
-                                if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
-                                    continue
-                                info=meth.get_information()
-                                if 'return' in info and info['return']=='boolean':
-                                    logic_cnt+=1
-                                    f.write("[%d]%s || %s\n" % (logic_cnt, immuneStr.value, meth.get_class_name()+meth.get_name()))
-                            if not logic_cnt:                                
-                                f.write("[%d]%s || %s\n" % (logic_cnt+1, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name()))        
-        f.close()
-# def get_logical_method(obj, dx, file):
-
-#     # 对于method 类型的参数有几个情况：
-#     #  1.单纯的弹窗函数，在该函数内没有什么有效判断逻辑,需要向上查找调用者函数  （向上递归）
-#     #  2.作为一个调用者函数,包含了判断逻辑和调用弹窗函数的函数，可能存在免疫逻辑判断函数  （查找 bool类型的被调用者函数)
-#     #  3.作为一个调用者函数，调用了弹窗函数, 自身存在逻辑判断条件，而非调用免疫逻辑判断函数 (查找有关的条件指令)
-#     if type(obj) == analysis.MethodClassAnalysis or type(obj) == analysis.MethodAnalysis:
-#         find_logic = 0                        # 用来表示是否找到了 相应的逻辑函数
-#         if obj.is_external():               # 不考虑外部函数
-#             return
-
-#         # 向下查找 bool类型的被调用函数
-#         for call, meth, _ in obj.get_xref_to():
-#             if type(meth) == analysis.ExternalMethod:  # 不考虑外部函数
-#                 continue
-#             info = meth.get_information()
-#             # 返回类型为bool 类型
-#             if 'return' in info and info['return'] == 'boolean':
-#                 find_logic = find_logic+1
-#                 temp = obj.get_method()
-#                 file.write(temp.get_class_name()+temp.get_name() +
-#                            " ----calling---- "+meth.get_class_name()+meth.get_name()+"\n")
-
-#         # 查找函数内部条件跳转指令
-#         encode_meth = obj.get_method()
-#         file.write(encode_meth.get_class_name() +
-#                    encode_meth.get_name()+"  conditional mnemonic: \n")
-#         for ins in encode_meth.get_instructions():
-#             if ins.get_name() in Conditionlist:                  # 寻找条件语句
-#                 find_logic = find_logic+1
-#                 file.write(ins.get_name() + ins.get_output()+"\n")
-
-#         # 向上查找 1次
-#         if find_logic == 0:
-#             for class_, call, _ in obj.get_xref_from():
-#                 meth = class_.get_method_analysis(call)
-#                 if type(meth) == analysis.MethodClassAnalysis or type(meth) == analysis.MethodAnalysis:
-#                     get_logical_method(meth, dx, file)
-
-#         return
-
-#     if type(obj) == str:
-#         try:
-#             get_logical_method(dx.strings[obj], dx, file)
-#         except KeyError as er:
-#             print(er)
-#             print('\n')
-
-#     elif type(obj) == analysis.StringAnalysis:  # 字符串
-#         for class_, call in obj.get_xref_from():            # 获取所有调用该字符串的函数，分析该函数
-#             meth = class_.get_method_analysis(call)
-#             if type(meth) == analysis.MethodClassAnalysis or type(meth) == analysis.MethodAnalysis:
-#                 get_logical_method(meth, dx, file)
-
-
-#     # 不是上面的类型,则出错
-#     else:
-#         print("Error argument,str or method argument is required!")
+                try:
+                    str_patten=re.compile(r""+str_tag,re.S | re.M) # 正则表达式诡异的括号匹配错误
+                except re.error:
+                    # print(str_tag)
+                    break     
+                str_match=str_patten.search(source)
+                if str_match is None:                             # 一些稀奇古怪的字符串在转义过程中转义字符消失导致的不匹配,忽略掉 
+                    # print(source)
+                    # print(repr(r""+str_tag))
+                    continue    
+                search_end=str_match.start()                      # 从字符串调用位置倒序匹配
+                search_begin=0 if search_end < 88 else search_end-88
+                if_pattern = re.compile(r'if [(].*[)] {')               # 匹配 if,else if...
+                while search_end:
+                    if_match=if_pattern.findall(source,search_begin,search_end)
+                    if len(if_match):
+                        res=if_match[-1][0:-2]                    # 匹配最接近 字符串的if语句，并去掉括号
+                        break
+                    temp=search_begin
+                    search_begin=0 if search_end < 88 else search_end-88
+                    search_end=temp
+# 4. 根据res结果进行处理
+                if res and self.is_logic(res):                         # 匹配到表达式或者函数                                                                          
+                    f.write("[%d]%s || %s-->logic:\t%s\n" % (logic_cnt, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name(),res))
+                    logic_cnt+=1 
+                elif res and self.is_local(res)[0]:                    # 匹配到局部寄存器 if(v0)....类似的语句
+                    name=self.is_local(res)[1]
+                    value=self.get_local_value(name,source,search_end)
+                    if value:
+                        f.write("[%d]%s || %s-->logic:\t%s\n" % (logic_cnt, immuneStr.value, EncodedMethod.get_class_name()+EncodedMethod.get_name(),name+"-->"+value))
+                        logic_cnt+=1 
+                else:                                                  # 匹配结果为空或者存在参数传递，使用get_logical_method近似匹配
+                    method=self.dx.get_method_analysis(EncodedMethod)  # 获取 EncodedMethod对应的MethodclassAnalysis 
+                    for class_,call,_ in method.get_xref_from():       # 寻找当前函数的caller
+                        MethodAnalysis=class_.get_method_analysis(call)
+                        EncodedMethod=MethodAnalysis.get_method()
+                        result=self.approximate_match(EncodedMethod)   # 对 caller函数进行近似匹配  
+                        if result:
+                            for res in result:
+                                f.write("[%d]%s || approximate match-->logic:\t%s\n" % (logic_cnt, immuneStr.value,res))
+                                logic_cnt+=1
+        f.close()        
+                        
 if __name__ == '__main__':
-    file_path = "C:\\Users\\86157\\Desktop\\example\\"
-    apk_full_name="b.apk"
+    file_path = "C:/Users/86157/Desktop/example/"
+    apk_full_name="a.apk"
     apk_name=os.path.splitext(apk_full_name)[0]
-    apk_file_path=file_path+apk_name+"\\"
+    apk_file_path=file_path+apk_name+"/"
     if not os.path.exists(apk_file_path):
         os.mkdir(apk_file_path)
-    apk_sess_path=apk_file_path+apk_name+".ag"
     
-    tool = StrTool(apkfile=file_path+apk_full_name,sess_path=apk_sess_path)
+    tool = StrTool(file_path+apk_full_name)
     # 1. 对字符串提取
     tool.getStrings()
-
+    print("get strings finish")
     # 2. 对字符串进行情感分析
     tool.strAnalysis()
-
+    print("emotion analyze finish")
     # 3. 对消极字符串进行交叉引用
     tool.negStrXref()
-
+    print("get xref finish")
     # 4. 对检索出的消极字符串进行剔除
     tool.add_exception_list(file_path+"ThirdLibs.txt")  # 添加第三方库
     tool.stringsFilter()
-
+    print("filter string finish")
     # 4.1输出消极字符串
     # 输出到指定文件夹
-    tool.output_calling_method(apk_file_path)
+    tool.output_calling_method(file_path)
+    print("output finish")
     # 直接打印
     # tool.output_calling_method()
 
@@ -406,21 +502,6 @@ if __name__ == '__main__':
     # -用法与androguard一致
     # --------------------------------
 
-    # 5. 逻辑上查找免疫函数 并输出
-    tool.get_logical_method(file=apk_file_path+"logical_method.txt")
-    # decompiler = DecompilerJADX(tool.d, tool.dx,jadx="D:\\ctf_tool\\jadx-1.2.0\\bin\\jadx.bat")
-    # tool.d.set_decompiler(decompiler)
-    # tool.d.set_vmanalysis(tool.dx)
-
-    # for immuneStr in tool.filteredStr:
-    #     for c, EncodedMethod in immuneStr.get_xref_from():            # 获取所有调用该字符串的函数，分析该函数
-    #         # meth = c.get_method_analysis(EncodedMethod)
-    #         # print(immuneStr.value+":")
-    #         print(EncodedMethod)
-            # print(decompiler.get_source_method(EncodedMethod))
-            # try:
-            #     print(EncodedMethod.source())
-            # except TypeError as error:
-            #     print(error)
-            # except AttributeError as e:
-            #     print(e)
+    # 5. 查找免疫逻辑语句或函数并输出到文件
+    tool.get_logical(file=apk_file_path+"logical_method.txt")
+   
