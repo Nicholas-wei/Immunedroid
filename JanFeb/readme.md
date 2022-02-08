@@ -9,5 +9,5 @@ pip install PyQt5
 
 TODO:
 
-- [] 进度条
-- [] 显示app中包含的免疫
+- [√] 进度条
+- [ ] 显示app中包含的免疫
